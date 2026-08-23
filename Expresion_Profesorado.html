@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#2E5C99">
-<link rel="icon" href="https://siurot.net/icons/logo-header.png?v=2">
+<link rel="icon" href="https://raw.githubusercontent.com/ManuelVS8/Expresion_Escrita/refs/heads/main/Siurot_logo.png">
 <title>Panel del Profesorado · Expresión Escrita</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -207,7 +207,7 @@
   <div class="screen active" id="screen-login">
     <div class="content" style="display:flex; align-items:center; min-height:90vh;">
       <div class="card" style="width:100%; text-align:center;">
-        <img src="https://siurot.net/icons/logo-header.png?v=2" alt="CEIP Manuel Siurot" style="width:64px; height:64px; border-radius:16px; margin-bottom:10px;">
+        <img src="https://raw.githubusercontent.com/ManuelVS8/Expresion_Escrita/refs/heads/main/Siurot_logo.png" alt="CEIP Manuel Siurot" style="width:64px; height:64px; border-radius:16px; margin-bottom:10px;">
         <h2 class="title">Panel del Profesorado</h2>
         <p class="subtitle">Expresión Escrita · C.E.I.P. Manuel Siurot</p>
         <button class="btn-google" id="btn-login-google">
@@ -221,7 +221,7 @@
   <!-- APP PRINCIPAL (tras login) -->
   <div class="screen" id="screen-app">
     <div class="topbar">
-      <img src="https://siurot.net/icons/logo-header.png?v=2" alt="">
+      <img src="https://raw.githubusercontent.com/ManuelVS8/Expresion_Escrita/refs/heads/main/Siurot_logo.png" alt="">
       <div class="who">
         <div class="nombre" id="topbar-nombre">—</div>
         <div class="rol">Profesorado</div>
@@ -324,12 +324,12 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 /* ==========================================================
    CONFIGURACIÓN — rellena APPS_SCRIPT_URL cuando despliegues el backend
    ========================================================== */
-const APPS_SCRIPT_URL = 'PEGA_AQUI_LA_URL_DE_TU_APP_WEB_DE_APPS_SCRIPT';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzDUwzPvES18FQetF3ZyoDkU7kbNJVVJjvLi5c5dtKdVhuOLs0wnWsB4Wx_9sGeS4RlcA/exec';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCX8j2ycnULIfgQV_DDv__H8jaZgP3GcV0",
@@ -405,13 +405,19 @@ function confirmar(titulo, texto, onConfirmar){
 }
 
 /* ---------- LOGIN ---------- */
-document.getElementById('btn-login-google').addEventListener('click', async ()=>{
-  const errorEl = document.getElementById('login-error');
-  errorEl.style.display = 'none';
+document.getElementById('btn-login-google').addEventListener('click', ()=>{
   mostrarCargando('Entrando…');
+  const provider = new GoogleAuthProvider();
+  signInWithRedirect(auth, provider);
+  // La página se recarga tras esto; el resultado se procesa más abajo con getRedirectResult
+});
+
+async function procesarResultadoRedireccion(){
+  const errorEl = document.getElementById('login-error');
   try{
-    const provider = new GoogleAuthProvider();
-    const resultado = await signInWithPopup(auth, provider);
+    const resultado = await getRedirectResult(auth);
+    if(!resultado) return; // no venimos de un redirect de login, nada que hacer
+    mostrarCargando('Entrando…');
     const idToken = await resultado.user.getIdToken();
     const respuesta = await llamarBackend('login', { idToken });
     if(!respuesta.ok){
@@ -428,10 +434,11 @@ document.getElementById('btn-login-google').addEventListener('click', async ()=>
     ocultarCargando();
   }catch(err){
     ocultarCargando();
-    errorEl.textContent = 'No se pudo iniciar sesión con Google';
+    errorEl.textContent = 'Error: ' + (err.code || err.message || 'desconocido');
     errorEl.style.display = 'block';
   }
-});
+}
+procesarResultadoRedireccion();
 
 document.getElementById('btn-logout').addEventListener('click', ()=>{
   confirmar('Cerrar sesión', '¿Seguro que quieres salir del panel?', async ()=>{

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Expresión Escrita">
 <meta name="theme-color" content="#2E5C99">
-<link rel="icon" href="https://siurot.net/icons/logo-header.png?v=2">
+<link rel="icon" href="https://raw.githubusercontent.com/ManuelVS8/Expresion_Escrita/refs/heads/main/Siurot_logo.png">
 <title>Expresión Escrita · CEIP Manuel Siurot</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
@@ -398,7 +398,7 @@
 
 <div class="app">
   <div class="brand">
-    <img class="logo" src="https://siurot.net/icons/logo-header.png?v=2" alt="CEIP Manuel Siurot">
+    <img class="logo" src="https://raw.githubusercontent.com/ManuelVS8/Expresion_Escrita/refs/heads/main/Siurot_logo.png" alt="CEIP Manuel Siurot">
     <h1>Expresión Escrita</h1>
     <p>Escribe, mejora y crece como escritor o escritora</p>
     <div class="school">C.E.I.P. Manuel Siurot</div>
@@ -869,7 +869,8 @@ function mostrarResultados(r){
     scoreNumEl.textContent = '—';
     scoreMsgEl.textContent = 'Tu profe lo revisará directamente 🙂';
     dimsList.innerHTML = '';
-    feedbackEl.textContent = 'No se ha podido generar una valoración automática en este momento, pero tu texto se ha guardado correctamente y tu profe lo corregirá.';
+    feedbackEl.textContent = 'No se ha podido generar una valoración automática en este momento, pero tu texto se ha guardado correctamente y tu profe lo corregirá.'
+      + (r.error ? ` (motivo técnico: ${r.error})` : '');
     document.getElementById('btn-model').style.display = 'none';
     return;
   }
