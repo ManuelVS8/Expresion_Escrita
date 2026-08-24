@@ -410,6 +410,7 @@
     <div class="step-dot" data-step="1"></div>
     <div class="step-dot" data-step="2"></div>
     <div class="step-dot" data-step="3"></div>
+    <div class="step-dot" data-step="4"></div>
   </div>
   <button id="btn-sonido" class="sound-toggle" title="Silenciar sonido" aria-label="Silenciar sonido">🔊</button>
 
@@ -442,16 +443,27 @@
     </div>
   </div>
 
-  <!-- PANTALLA 1: TIPO DE TEXTO -->
-  <div class="screen" id="screen-tipo">
+  <!-- PANTALLA 1: IDIOMA -->
+  <div class="screen" id="screen-idioma">
     <div class="card">
-      <h2 class="title">¿Qué vas a escribir?</h2>
-      <p class="subtitle">Elige el idioma y el tipo de texto.</p>
+      <h2 class="title">¿En qué idioma vas a escribir?</h2>
+      <p class="subtitle">Elige el idioma de tu texto.</p>
 
-      <div class="grid-tipos" style="margin-bottom:14px;">
+      <div class="grid-tipos">
         <div class="idioma-btn selected" data-idioma="es"><span class="emoji">🇪🇸</span>Español</div>
         <div class="idioma-btn" data-idioma="en"><span class="emoji">🇬🇧</span>English</div>
       </div>
+
+      <button class="btn" id="btn-to-tipo2">Continuar</button>
+      <button class="btn secondary" id="btn-back-select">Atrás</button>
+    </div>
+  </div>
+
+  <!-- PANTALLA 2: TIPO DE TEXTO -->
+  <div class="screen" id="screen-tipo">
+    <div class="card">
+      <h2 class="title">¿Qué vas a escribir?</h2>
+      <p class="subtitle">Elige el tipo de texto que quieres practicar hoy.</p>
 
       <div class="grid-tipos" id="grid-tipos">
         <div class="tipo-btn" data-tipo="Cuento"><span class="emoji">📖</span>Cuento</div>
@@ -469,11 +481,11 @@
       </div>
 
       <button class="btn" id="btn-to-write" disabled>Continuar</button>
-      <button class="btn secondary" id="btn-back-select">Atrás</button>
+      <button class="btn secondary" id="btn-back-idioma">Atrás</button>
     </div>
   </div>
 
-  <!-- PANTALLA 2: ESCRITURA -->
+  <!-- PANTALLA 3: ESCRITURA -->
   <div class="screen" id="screen-write">
     <div class="card">
       <div class="write-head">
@@ -710,7 +722,7 @@ document.getElementById('btn-sin-codigo').addEventListener('click', ()=>{
 
 document.getElementById('btn-to-tipo').addEventListener('click', ()=>{
   if(state.modo === 'entrega'){
-    goTo('screen-tipo', 1);
+    goTo('screen-idioma', 1);
     return;
   }
   if(state.modo === 'practica'){
@@ -719,19 +731,14 @@ document.getElementById('btn-to-tipo').addEventListener('click', ()=>{
       return;
     }
     state.curso = selCursoLibre.value;
-    goTo('screen-tipo', 1);
+    goTo('screen-idioma', 1);
     return;
   }
   showToast('Escribe tu código, o pulsa "practicar" si no lo tienes');
 });
 
-/* ---------- PANTALLA 1: tipo de texto ---------- */
-const tipoBtns = document.querySelectorAll('.tipo-btn');
+/* ---------- PANTALLA 1: idioma ---------- */
 const idiomaBtns = document.querySelectorAll('.idioma-btn');
-const otroWrap = document.getElementById('otro-tipo-wrap');
-const otroInput = document.getElementById('otro-tipo-input');
-const btnToWrite = document.getElementById('btn-to-write');
-
 idiomaBtns.forEach(btn=>{
   btn.addEventListener('click', ()=>{
     idiomaBtns.forEach(b=>b.classList.remove('selected'));
@@ -739,6 +746,14 @@ idiomaBtns.forEach(btn=>{
     state.idioma = btn.dataset.idioma;
   });
 });
+document.getElementById('btn-back-select').addEventListener('click', ()=> goTo('screen-select', 0));
+document.getElementById('btn-to-tipo2').addEventListener('click', ()=> goTo('screen-tipo', 2));
+
+/* ---------- PANTALLA 2: tipo de texto ---------- */
+const tipoBtns = document.querySelectorAll('.tipo-btn');
+const otroWrap = document.getElementById('otro-tipo-wrap');
+const otroInput = document.getElementById('otro-tipo-input');
+const btnToWrite = document.getElementById('btn-to-write');
 
 tipoBtns.forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -755,14 +770,14 @@ function validateTipo(){
   btnToWrite.disabled = !ok;
 }
 
-document.getElementById('btn-back-select').addEventListener('click', ()=> goTo('screen-select', 0));
+document.getElementById('btn-back-idioma').addEventListener('click', ()=> goTo('screen-idioma', 1));
 document.getElementById('btn-to-write').addEventListener('click', ()=>{
   state.tipoLibre = state.tipo === 'Otro' ? otroInput.value.trim() : state.tipo;
   document.getElementById('tag-tipo').textContent = state.tipoLibre;
-  goTo('screen-write', 2);
+  goTo('screen-write', 3);
 });
 
-/* ---------- PANTALLA 2: escritura ---------- */
+/* ---------- PANTALLA 3: escritura ---------- */
 const textarea = document.getElementById('texto-alumno');
 const wordCount = document.getElementById('word-count');
 const btnIdea = document.getElementById('btn-idea');
@@ -780,7 +795,7 @@ btnIdea.addEventListener('click', ()=>{
   ideaBox.classList.add('show');
 });
 
-document.getElementById('btn-back-tipo').addEventListener('click', ()=> goTo('screen-tipo', 1));
+document.getElementById('btn-back-tipo').addEventListener('click', ()=> goTo('screen-tipo', 2));
 
 document.getElementById('btn-corregir').addEventListener('click', async ()=>{
   const words = textarea.value.trim().split(/\s+/).filter(Boolean);
@@ -805,7 +820,7 @@ async function corregirYGuardar(){
   if(state.modo === 'practica'){
     ocultarCargando();
     mostrarResultados(resultado);
-    goTo('screen-results', 3);
+    goTo('screen-results', 4);
     if(resultado.ok) reproducir('correcto');
     return;
   }
@@ -826,7 +841,7 @@ async function corregirYGuardar(){
       await intentarGuardar(resultado, true);
       ocultarCargando();
       mostrarResultados(resultado);
-      goTo('screen-results', 3);
+      goTo('screen-results', 4);
       if(resultado.ok) reproducir('correcto');
     });
     document.getElementById('cancelar-sobrescribir').addEventListener('click', cerrarModal);
@@ -834,7 +849,7 @@ async function corregirYGuardar(){
   }
 
   mostrarResultados(resultado);
-  goTo('screen-results', 3);
+  goTo('screen-results', 4);
   if(resultado.ok) reproducir('correcto');
 }
 
@@ -916,7 +931,7 @@ document.getElementById('btn-restart').addEventListener('click', ()=>{
   btnToWrite.disabled = true;
   state.tipo = ''; state.tipoLibre = ''; state.texto = ''; state.idioma = 'es';
   idiomaBtns.forEach(b=>b.classList.toggle('selected', b.dataset.idioma==='es'));
-  goTo('screen-tipo', 1);
+  goTo('screen-idioma', 1);
 });
 
 </script>
