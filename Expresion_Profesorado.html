@@ -326,7 +326,7 @@
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbycHMDWfh8mkTEkmHISuLdH0b8c5qybyq2GfUeO1lPpjphUFF4o2kSdlaGxN9F-EWJC3A/exec';
 
 // El MISMO Client ID que hayas puesto en GOOGLE_CLIENT_ID dentro de Code.gs
-const GOOGLE_CLIENT_ID = 'PEGA_AQUI_TU_CLIENT_ID.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '675015124931-qv0m0c5apck8hrhoq07omt850165f41n.apps.googleusercontent.com';
 
 /* ========================================================== */
 
@@ -423,8 +423,8 @@ function iniciarBotonGoogle(){
   }
   google.accounts.id.initialize({
     client_id: GOOGLE_CLIENT_ID,
-    callback: manejarCredencialGoogle,
-    hd: 'g.educaand.es' // solo sugiere cuentas de este dominio en el selector
+    callback: manejarCredencialGoogle
+    // hd quitado temporalmente para descartar que sea la causa del invalid_client
   });
   google.accounts.id.renderButton(
     document.getElementById('google-signin-btn'),
