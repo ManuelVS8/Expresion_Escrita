@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#2E5C99">
 <link rel="icon" href="https://raw.githubusercontent.com/ManuelVS8/Expresion_Escrita/refs/heads/main/Siurot_logo.png">
-<title>Panel del Profesorado · Expresión Escrita</title>
+<title>Expresión_Profesorado</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -25,8 +25,8 @@
     background-attachment:fixed; color:var(--ink);
     display:flex; justify-content:center;
   }
-  .app{ width:100%; max-width:480px; min-height:100vh; display:flex; flex-direction:column; }
-  .content{ flex:1; padding:20px 16px 90px; }
+  .app{ width:100%; max-width:1000px; min-height:100vh; display:flex; flex-direction:column; }
+  .content{ flex:1; padding:20px 24px 40px; }
 
   /* CABECERA */
   .topbar{
@@ -43,7 +43,7 @@
   }
 
   .card{
-    background:var(--paper); border-radius:20px; padding:18px 16px;
+    background:var(--paper); border-radius:20px; padding:28px 32px;
     box-shadow:0 14px 34px rgba(15,45,80,.22); margin-bottom:14px;
   }
   .screen{display:none;} .screen.active{display:block; animation:fadeUp .3s ease;}
@@ -107,19 +107,17 @@
 
   .empty{ text-align:center; color:var(--muted); font-size:13px; padding:20px 0; }
 
-  /* NAV INFERIOR */
+  /* NAV DE PESTAÑAS (arriba, propio de escritorio) */
   .bottom-nav{
-    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
-    width:100%; max-width:480px; background:#fff;
-    box-shadow:0 -8px 24px rgba(15,45,80,.18);
-    display:flex; border-radius:20px 20px 0 0; overflow:hidden;
+    display:flex; gap:6px; margin:0 24px 14px; padding:4px;
+    background:rgba(255,255,255,.15); border-radius:14px;
   }
   .nav-item{
-    flex:1; text-align:center; padding:12px 0 10px; background:none; border:none;
-    font-family:'Nunito',sans-serif; font-size:11px; font-weight:700; color:var(--muted); cursor:pointer;
+    flex:1; text-align:center; padding:10px 0; background:none; border:none; border-radius:10px;
+    font-family:'Nunito',sans-serif; font-size:13px; font-weight:700; color:#fff; cursor:pointer;
   }
-  .nav-item .ic{ font-size:19px; display:block; margin-bottom:2px; }
-  .nav-item.active{ color:var(--orange-1); }
+  .nav-item .ic{ font-size:16px; margin-right:6px; }
+  .nav-item.active{ background:#fff; color:var(--orange-1); }
 
   /* MODAL DE CONFIRMACIÓN (propio, sin confirm()) */
   .overlay{
@@ -128,7 +126,7 @@
   }
   .overlay.show{ display:flex; }
   .modal{
-    background:#fff; width:100%; max-width:480px; border-radius:22px 22px 0 0;
+    background:#fff; width:100%; max-width:640px; border-radius:22px 22px 0 0;
     padding:22px 20px 26px; animation:slideUp .25s ease;
   }
   @keyframes slideUp{ from{transform:translateY(30px); opacity:0;} to{transform:translateY(0); opacity:1;} }
@@ -229,6 +227,12 @@
       <button id="btn-logout" title="Cerrar sesión">⎋</button>
     </div>
 
+    <div class="bottom-nav">
+      <button class="nav-item active" data-tab="alumnado"><span class="ic">🧑‍🎓</span>Clases</button>
+      <button class="nav-item" data-tab="entregas"><span class="ic">📄</span>Entregas</button>
+      <button class="nav-item" data-tab="progreso"><span class="ic">📈</span>Progreso</button>
+    </div>
+
     <div class="content">
 
       <!-- TAB: ALUMNADO (clases primero) -->
@@ -297,12 +301,6 @@
         </div>
       </div>
 
-    </div>
-
-    <div class="bottom-nav">
-      <button class="nav-item active" data-tab="alumnado"><span class="ic">🧑‍🎓</span>Clases</button>
-      <button class="nav-item" data-tab="entregas"><span class="ic">📄</span>Entregas</button>
-      <button class="nav-item" data-tab="progreso"><span class="ic">📈</span>Progreso</button>
     </div>
   </div>
 
@@ -405,11 +403,18 @@ function confirmar(titulo, texto, onConfirmar){
 }
 
 /* ---------- LOGIN ---------- */
-document.getElementById('btn-login-google').addEventListener('click', ()=>{
+document.getElementById('btn-login-google').addEventListener('click', async ()=>{
+  const errorEl = document.getElementById('login-error');
+  errorEl.style.display = 'none';
   mostrarCargando('Entrando…');
-  const provider = new GoogleAuthProvider();
-  signInWithRedirect(auth, provider);
-  // La página se recarga tras esto; el resultado se procesa más abajo con getRedirectResult
+  try{
+    const provider = new GoogleAuthProvider();
+    await signInWithRedirect(auth, provider);
+  }catch(err){
+    ocultarCargando();
+    errorEl.textContent = 'Error: ' + (err.code || err.message || 'desconocido');
+    errorEl.style.display = 'block';
+  }
 });
 
 async function procesarResultadoRedireccion(){
