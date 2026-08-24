@@ -892,7 +892,9 @@ function mostrarResultados(r){
     document.getElementById('btn-model').style.display = 'none';
     return;
   }
-  document.getElementById('btn-model').style.display = 'none'; // pendiente para una fase futura
+  const btnModel = document.getElementById('btn-model');
+  const modelBox = document.getElementById('model-box');
+  modelBox.classList.remove('show');
 
   scoreNumEl.textContent = r.notaFinal.toFixed(1);
   scoreMsgEl.textContent = r.notaFinal >= 7.5 ? '¡Excelente trabajo! 🌟' : r.notaFinal >= 5 ? 'Vas por buen camino 💪' : 'Sigue practicando, ¡tú puedes! ✨';
@@ -915,6 +917,13 @@ function mostrarResultados(r){
   });
 
   feedbackEl.textContent = r.comentario || '';
+
+  if(r.modelo && r.modelo.trim()){
+    btnModel.style.display = 'block';
+    modelBox.textContent = r.modelo;
+  } else {
+    btnModel.style.display = 'none';
+  }
 }
 
 document.getElementById('btn-model').addEventListener('click', ()=>{
