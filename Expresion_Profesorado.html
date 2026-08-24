@@ -10,6 +10,7 @@
 <title>Expresión_Profesorado</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
   :root{
@@ -208,9 +209,7 @@
         <img src="https://raw.githubusercontent.com/ManuelVS8/Expresion_Escrita/refs/heads/main/Siurot_logo.png" alt="CEIP Manuel Siurot" style="width:64px; height:64px; border-radius:16px; margin-bottom:10px;">
         <h2 class="title">Panel del Profesorado</h2>
         <p class="subtitle">Expresión Escrita · C.E.I.P. Manuel Siurot</p>
-        <button class="btn-google" id="btn-login-google">
-          <span>🔐</span> Iniciar sesión con Google
-        </button>
+        <div id="google-signin-btn" style="display:flex; justify-content:center; margin-top:10px;"></div>
         <p id="login-error" style="color:var(--red); font-size:12.5px; margin-top:10px; display:none;"></p>
       </div>
     </div>
@@ -320,25 +319,14 @@
   </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
+<script>
 /* ==========================================================
-   CONFIGURACIÓN — rellena APPS_SCRIPT_URL cuando despliegues el backend
+   CONFIGURACIÓN
    ========================================================== */
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbycHMDWfh8mkTEkmHISuLdH0b8c5qybyq2GfUeO1lPpjphUFF4o2kSdlaGxN9F-EWJC3A/exec';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCX8j2ycnULIfgQV_DDv__H8jaZgP3GcV0",
-  authDomain: "siurotalumnado.firebaseapp.com",
-  projectId: "siurotalumnado",
-  storageBucket: "siurotalumnado.firebasestorage.app",
-  messagingSenderId: "936225942344",
-  appId: "1:936225942344:web:125faf7f3145d90df1e17d"
-};
-const firebaseApp = initializeApp(firebaseConfig);
-const auth = getAuth(firebaseApp);
+// El MISMO Client ID que hayas puesto en GOOGLE_CLIENT_ID dentro de Code.gs
+const GOOGLE_CLIENT_ID = 'PEGA_AQUI_TU_CLIENT_ID.apps.googleusercontent.com';
 
 /* ========================================================== */
 
@@ -402,29 +390,13 @@ function confirmar(titulo, texto, onConfirmar){
   document.getElementById('modal-cancelar').addEventListener('click', cerrarModal);
 }
 
-/* ---------- LOGIN ---------- */
-document.getElementById('btn-login-google').addEventListener('click', async ()=>{
+/* ---------- LOGIN (Google Identity Services, sin redirección) ---------- */
+async function manejarCredencialGoogle(response){
   const errorEl = document.getElementById('login-error');
   errorEl.style.display = 'none';
   mostrarCargando('Entrando…');
   try{
-    const provider = new GoogleAuthProvider();
-    await signInWithRedirect(auth, provider);
-  }catch(err){
-    ocultarCargando();
-    errorEl.textContent = 'Error: ' + (err.code || err.message || 'desconocido');
-    errorEl.style.display = 'block';
-  }
-});
-
-async function procesarResultadoRedireccion(){
-  const errorEl = document.getElementById('login-error');
-  try{
-    const resultado = await getRedirectResult(auth);
-    if(!resultado) return; // no venimos de un redirect de login, nada que hacer
-    mostrarCargando('Entrando…');
-    const idToken = await resultado.user.getIdToken();
-    const respuesta = await llamarBackend('login', { idToken });
+    const respuesta = await llamarBackend('login', { idToken: response.credential });
     if(!respuesta.ok){
       ocultarCargando();
       errorEl.textContent = respuesta.error || 'No se pudo iniciar sesión';
@@ -439,15 +411,30 @@ async function procesarResultadoRedireccion(){
     ocultarCargando();
   }catch(err){
     ocultarCargando();
-    errorEl.textContent = 'Error: ' + (err.code || err.message || 'desconocido');
+    errorEl.textContent = 'Error: ' + (err.message || 'desconocido');
     errorEl.style.display = 'block';
   }
 }
-procesarResultadoRedireccion();
+
+function iniciarBotonGoogle(){
+  if(typeof google === 'undefined'){
+    setTimeout(iniciarBotonGoogle, 300); // el script de Google puede tardar un poco en cargar
+    return;
+  }
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: manejarCredencialGoogle,
+    hd: 'g.educaand.es' // solo sugiere cuentas de este dominio en el selector
+  });
+  google.accounts.id.renderButton(
+    document.getElementById('google-signin-btn'),
+    { theme: 'outline', size: 'large', text: 'signin_with', shape: 'pill' }
+  );
+}
+iniciarBotonGoogle();
 
 document.getElementById('btn-logout').addEventListener('click', ()=>{
-  confirmar('Cerrar sesión', '¿Seguro que quieres salir del panel?', async ()=>{
-    await signOut(auth);
+  confirmar('Cerrar sesión', '¿Seguro que quieres salir del panel?', ()=>{
     sesion = { token:null, profesorId:null, nombre:null };
     document.getElementById('screen-app').classList.remove('active');
     document.getElementById('screen-login').classList.add('active');
