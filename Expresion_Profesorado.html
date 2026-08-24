@@ -892,7 +892,7 @@ function abrirEntrega(e){
       <div class="dim-mini"><span>Estructura</span><span>${p.estructura ?? '—'}</span></div>
       <div class="dim-mini"><span>Coherencia</span><span>${p.coherencia ?? '—'}</span></div>
       <div class="dim-mini"><span>Vocabulario</span><span>${p.vocabulario ?? '—'}</span></div>
-      ${e.comentarioIA ? `<p style="margin-top:6px;">"${e.comentarioIA.replace(/</g,'&lt;')}"</p>` : ''}
+      ${e.comentarioIA ? `<p style="margin-top:6px; white-space:pre-line;">${e.comentarioIA.replace(/</g,'&lt;')}</p>` : ''}
     </div>
 
     <label>Tu nota final (0-10)</label>

@@ -271,13 +271,15 @@
     display:inline-block;
   }
   .dim{
-    display:flex;
-    align-items:center;
-    gap:12px;
     padding:12px 0;
     border-bottom:1px solid #EEF2F7;
   }
   .dim:last-child{border-bottom:none;}
+  .dim-top{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
   .dim-dot{
     width:14px; height:14px;
     border-radius:50%;
@@ -293,6 +295,12 @@
     overflow:hidden;
   }
   .dim-bar-fill{height:100%; border-radius:6px;}
+  .dim-comment{
+    margin:8px 0 0 26px;
+    font-size:12.5px;
+    line-height:1.5;
+    color:var(--muted);
+  }
   .dim-score{
     font-family:'Fredoka',sans-serif;
     font-weight:600;
@@ -521,9 +529,6 @@
     </div>
 
     <div class="card">
-      <h2 class="title">Comentario</h2>
-      <div class="feedback-box" id="feedback-text"></div>
-
       <button class="btn ghost" id="btn-model">📝 Ver cómo podría quedar mi texto</button>
       <div class="model-box" id="model-box"></div>
     </div>
@@ -854,6 +859,10 @@ async function corregirYGuardar(){
 }
 
 async function intentarGuardar(resultado, confirmarSobrescritura){
+  const nombresDim = { ortografia:'Ortografía', gramatica:'Gramática', estructura:'Estructura', coherencia:'Coherencia', vocabulario:'Vocabulario' };
+  const comentarioUnido = resultado.ok && resultado.comentarios
+    ? Object.entries(resultado.comentarios).map(([clave, texto]) => `${nombresDim[clave] || clave}: ${texto}`).join('\n')
+    : null;
   const r = await llamarBackend('guardarEntrega', {
     codigo: state.codigo,
     tipoTexto: state.tipoLibre,
@@ -861,7 +870,7 @@ async function intentarGuardar(resultado, confirmarSobrescritura){
     idioma: state.idioma,
     puntuaciones: resultado.ok ? resultado.puntuaciones : null,
     notaFinal: resultado.ok ? resultado.notaFinal : null,
-    comentario: resultado.ok ? resultado.comentario : null,
+    comentario: comentarioUnido,
     confirmarSobrescritura
   });
   if(r.ok && r.requiereConfirmacion) return 'requiere_confirmacion';
@@ -878,7 +887,6 @@ function mostrarResultados(r){
   const dimsList = document.getElementById('dims-list');
   const scoreNumEl = document.getElementById('score-final');
   const scoreMsgEl = document.getElementById('score-msg');
-  const feedbackEl = document.getElementById('feedback-text');
 
   if(!r.ok){
     // La IA no ha podido corregir ahora mismo
@@ -887,8 +895,7 @@ function mostrarResultados(r){
       ? 'No se ha podido generar una valoración automática en este momento. Puedes volver a intentarlo en un rato.'
       : 'No se ha podido generar una valoración automática en este momento, pero tu texto se ha guardado correctamente y tu profe lo corregirá.';
     scoreMsgEl.textContent = state.modo === 'practica' ? 'Inténtalo de nuevo en un rato 🙂' : 'Tu profe lo revisará directamente 🙂';
-    dimsList.innerHTML = '';
-    feedbackEl.textContent = mensajeBase + (r.error ? ` (motivo técnico: ${r.error})` : '');
+    dimsList.innerHTML = `<p style="font-size:12.5px; color:var(--muted); padding:8px 0;">${mensajeBase}${r.error ? ` (motivo técnico: ${r.error})` : ''}</p>`;
     document.getElementById('btn-model').style.display = 'none';
     return;
   }
@@ -903,20 +910,22 @@ function mostrarResultados(r){
   dimsList.innerHTML = '';
   Object.entries(r.puntuaciones).forEach(([clave, valor])=>{
     const col = colorFor(valor).c;
+    const comentario = (r.comentarios && r.comentarios[clave]) || '';
     const row = document.createElement('div');
     row.className = 'dim';
     row.innerHTML = `
-      <div class="dim-dot" style="background:${col}"></div>
-      <div class="dim-info">
-        <div class="dim-name">${nombres[clave] || clave}</div>
-        <div class="dim-bar"><div class="dim-bar-fill" style="width:${valor*10}%;background:${col}"></div></div>
+      <div class="dim-top">
+        <div class="dim-dot" style="background:${col}"></div>
+        <div class="dim-info">
+          <div class="dim-name">${nombres[clave] || clave}</div>
+          <div class="dim-bar"><div class="dim-bar-fill" style="width:${valor*10}%;background:${col}"></div></div>
+        </div>
+        <div class="dim-score" style="color:${col}">${valor.toFixed(1)}</div>
       </div>
-      <div class="dim-score" style="color:${col}">${valor.toFixed(1)}</div>
+      ${comentario ? `<div class="dim-comment">${comentario}</div>` : ''}
     `;
     dimsList.appendChild(row);
   });
-
-  feedbackEl.textContent = r.comentario || '';
 
   if(r.modelo && r.modelo.trim()){
     btnModel.style.display = 'block';
